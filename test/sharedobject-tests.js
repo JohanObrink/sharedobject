@@ -204,6 +204,7 @@ describe('SharedObject', function() {
             expect(event).to.equal('sharedobject');
             expect(data).to.eql({
               path: '/',
+              propertyPath: 'foo',
               data: { foo: 'bar' }
             });
             done();
