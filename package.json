@@ -1,7 +1,17 @@
 {
   "name": "sharedobject",
   "version": "0.0.1",
-  "private": true,
+  "private": false,
+  "keywords": ["sharedobject", "socket.io"],
+
+  "bugs": {
+    "url" : "https://github.com/JohanObrink/sharedobject/issues"
+  },
+  "license": "MIT",
+  "repository" : {
+    "type" : "git",
+    "url" : "https://github.com/JohanObrink/sharedobject.git"
+  },
   "scripts": {
     "start": "node app.js",
     "test": "mocha -R spec test/*"
