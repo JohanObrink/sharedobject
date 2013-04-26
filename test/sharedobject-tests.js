@@ -53,7 +53,7 @@ describe('SharedObject', function() {
       so = new SharedObject();
     });
 
-    it('adds subscriber to list', function() {
+    it('removes subscriber from list', function() {
       var client1 = {}, client2 = {};
       so.subscribe(client1).subscribe(client2);
       expect(so.subscribers).to.have.length(2);
@@ -65,6 +65,94 @@ describe('SharedObject', function() {
       expect(so.subscribers[0]).to.equal(client1);
     });
 
+  });
+
+  describe('#get', function() {
+
+    var so;
+
+    beforeEach(function() {
+      so = new SharedObject();
+    });
+
+    it('returns root for undefined property', function(done) {
+      so.data = {};
+
+      so.get(function(err, data) {
+        expect(err).to.not.exist;
+        expect(data).to.equal(so.data);
+        done();
+      });
+    });
+
+    it('returns value for propertyPath', function(done) {
+      so.data = {
+        foo: {
+          bar: 'baz'
+        }
+      };
+
+      so.get('foo', function(err, data) {
+        expect(err).to.not.exist;
+        expect(data).to.equal(so.data.foo);
+        done();
+      });
+    });
+
+    it('returns value for deep propertyPath', function(done) {
+      so.data = {
+        foo: {
+          bar: 'baz'
+        }
+      };
+
+      so.get('foo.bar', function(err, data) {
+        expect(err).to.not.exist;
+        expect(data).to.equal('baz');
+        done();
+      });
+    });
+
+    it('creates property if undefined and create is true', function(done) {
+      so.data = {
+        foo: { }
+      };
+
+      so.get('foo.bar', true, function(err, data) {
+        expect(err).to.not.exist;
+        expect(data).to.eql({});
+        expect(so.data).to.eql({
+          foo: {
+            bar: {}
+          }
+        });
+        done();
+      });
+    });
+
+    it('returns an error if path does not exist and create is false', function(done) {
+      so.data = {
+        foo: { }
+      };
+
+      so.get('foo.bar', function(err, data) {
+        expect(err).to.exist;
+        expect(data).to.not.exist;
+        done();
+      });
+    });
+
+    it('returns an error if path is borken', function(done) {
+      so.data = {
+        foo: 42
+      };
+
+      so.get('foo.bar', true, function(err, data) {
+        expect(err).to.exist;
+        expect(data).to.not.exist;
+        done();
+      });
+    });
   });
 
   describe('#set', function() {
@@ -102,8 +190,27 @@ describe('SharedObject', function() {
       so.set('person.age', 40, function() {
         expect(so.data.person.age).to.equal(40);
         so.set('person.age.fake', '30', function(err, data) {
-          expect(err).to.equal('Invalid property \'person.age.fake\'');
+          expect(data).to.be.undefined;
+          expect(err).to.equal('Invalid property: \'person.age.fake\'');
+          done();
         });
+      });
+    });
+
+    describe('subscribers', function() {
+      it('should transmit the updated data to all subscribers', function(done) {
+        var socket = {
+          emit: function(event, data) {
+            expect(event).to.equal('sharedobject');
+            expect(data).to.eql({
+              path: '/',
+              data: { foo: 'bar' }
+            });
+            done();
+          }
+        };
+        so.subscribe(socket).set('foo', 'bar');
+
       });
     });
   });
