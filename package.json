@@ -2,6 +2,7 @@
   "name": "sharedobject",
   "version": "0.0.1",
   "private": false,
+  "description": "A simple implementation of shared objects via socket.io",
   "keywords": ["sharedobject", "socket.io"],
 
   "bugs": {
