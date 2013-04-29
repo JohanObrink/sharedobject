@@ -3,22 +3,25 @@
   "version": "0.0.1",
   "private": false,
   "description": "A simple implementation of shared objects via socket.io",
-  "keywords": ["sharedobject", "socket.io"],
-
+  "keywords": [
+    "sharedobject",
+    "socket.io"
+  ],
   "bugs": {
-    "url" : "https://github.com/JohanObrink/sharedobject/issues"
+    "url": "https://github.com/JohanObrink/sharedobject/issues"
   },
   "license": "MIT",
-  "repository" : {
-    "type" : "git",
-    "url" : "https://github.com/JohanObrink/sharedobject.git"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/JohanObrink/sharedobject.git"
   },
   "scripts": {
     "start": "node app.js",
     "test": "mocha -R spec test/*"
   },
   "dependencies": {
-    "socket.io": "~0.9.14"
+    "socket.io": "~0.9.14",
+    "underscore": "~1.4.4"
   },
   "devDependencies": {
     "grunt": "~0.4.1",
