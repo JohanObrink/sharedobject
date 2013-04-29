@@ -54,6 +54,89 @@ describe('SharedObjectStore', function() {
         expect(sos.sockets[0]).to.equal(socket2);
       });
 
+      describe('listeners', function() {
+
+        beforeEach(function() {
+          io.sockets.emit('connection', socket1);
+          io.sockets.emit('connection', socket2);
+        });
+
+        afterEach(function() {
+          socket1.emit('disconnect');
+          socket2.emit('disconnect');
+        });
+
+        describe('getObject', function() {
+          it('creates a SharedObject', function(done) {
+            socket1.emit('getObject', '/foo', true, function(err, obj) {
+              expect(err).to.not.exist;
+              expect(obj).to.be.instanceof(SharedObject);
+              expect(Object.keys(sos.objects)).to.have.length(1);
+              expect(sos.objects['/foo']).to.exist;
+              done();
+            });
+          });
+
+          it('connects to an existing SharedObject', function(done) {
+            socket1.emit('getObject', '/foo', true, function(err, obj) {
+              
+              var so = obj;
+
+              expect(Object.keys(sos.objects)).to.have.length(1);
+              expect(sos.objects['/foo']).to.exist;
+
+              socket1.emit('getObject', '/bar', true, function(err, obj) {
+
+                expect(obj).to.not.equal(so);
+                expect(Object.keys(sos.objects)).to.have.length(2);
+                expect(sos.objects['/bar']).to.exist;
+
+                socket2.emit('getObject', '/foo', true, function(err, obj) {
+                  expect(obj).to.equal(so);
+                  expect(Object.keys(sos.objects)).to.have.length(2);
+
+                  done();
+                });
+
+              });
+            });
+          });
+
+          it('subscribes the socket to object changes', function(done) {
+            socket1.emit('getObject', '/foo', true, function(err, obj) {
+              expect(obj.subscribers).to.have.length(1);
+              expect(obj.subscribers[0]).to.equal(socket1);
+
+              socket2.emit('getObject', '/foo', true, function(err, obj) {
+                expect(obj.subscribers).to.have.length(2);
+                expect(obj.subscribers[1]).to.equal(socket2);
+
+                done();
+              });
+            });
+          });
+
+          it('unsubscribes disconnected sockets', function(done) {
+            socket1.emit('getObject', '/foo', true, function(err, obj) {
+              expect(obj.subscribers).to.have.length(1);
+              expect(obj.subscribers[0]).to.equal(socket1);
+
+              socket2.emit('getObject', '/foo', true, function(err, obj) {
+                expect(obj.subscribers).to.have.length(2);
+                expect(obj.subscribers[1]).to.equal(socket2);
+
+                socket1.emit('disconnect');
+                expect(obj.subscribers).to.have.length(1);
+                expect(obj.subscribers[0]).to.equal(socket2);
+
+                done();
+              });
+            });
+          });
+        });
+
+      });
+
     });
   });
 
