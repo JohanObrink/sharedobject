@@ -133,6 +133,19 @@ describe('SharedObjectStore', function() {
               });
             });
           });
+
+          it('removes dead objects', function(done) {
+            socket1.emit('getObject', '/foo', true, function(err, obj) {
+              expect(obj.subscribers).to.have.length(1);
+              expect(obj.subscribers[0]).to.equal(socket1);
+
+              socket1.emit('disconnect');
+              expect(obj.subscribers).to.have.length(0);
+              expect(sos.objects).to.eql({});
+
+              done();
+            });
+          });
         });
 
       });
