@@ -13,7 +13,7 @@ describe('End to end test', function() {
   beforeEach(function(done) {
     port++;
 
-    server = io.listen(port);
+    server = io.listen(port, { log: false });
     sos = new SharedObjectStore(server);
 
     client1 = ioClient.connect('http://localhost:' + port);

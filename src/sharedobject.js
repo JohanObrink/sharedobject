@@ -40,10 +40,10 @@
     if(!this.listeners[event]) {
       this.listeners[event] = listener;
     } else if(this.listeners[event] instanceof Array) {
-      this[event].push(listener);
+      this.listeners[event].push(listener);
     } else {
-      var oldListener = this[event];
-      this[event] = [ this[event], listener ];
+      var oldListener = this.listeners[event];
+      this.listeners[event] = [ oldListener, listener ];
     }
 
     return this;
@@ -57,7 +57,7 @@
 
     if(this.listeners[event]) {
       if(this.listeners[event] instanceof Array) {
-        this.listeners = this.listeners.filter(function(l) {
+        this.listeners[event] = this.listeners[event].filter(function(l) {
           return l !== listener;
         });
         if(this.listeners[event].length === 1) {
@@ -65,7 +65,7 @@
         } else if(this.listeners[event].length === 0) {
           delete this.listeners[event];
         }
-      } else {
+      } else if(this.listeners[event] === listener) {
         delete this.listeners[event];
       }
     }
