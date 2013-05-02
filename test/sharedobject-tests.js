@@ -1,5 +1,6 @@
 
 var expect = require('chai').expect
+  , EventEmitter = require('events').EventEmitter
   , SharedObject = require('../lib/sharedObject').SharedObject;
 
 describe('SharedObject', function() {
@@ -37,12 +38,59 @@ describe('SharedObject', function() {
     });
 
     it('adds subscriber to list', function() {
-      var client = {};
+      var client = new EventEmitter();
       so.subscribe(client);
       expect(so.subscribers).to.have.length(1);
       expect(so.subscribers[0]).to.equal(client);
     });
 
+  });
+
+  describe('connected objects', function() {
+    var so1, so2, socket1, socket2;
+
+    beforeEach(function() {
+      so1 = new SharedObject();
+      so2 = new SharedObject();
+      socket1 = new EventEmitter();
+      socket2 = new EventEmitter();
+
+      so1
+        .subscribe(socket1)
+        .subscribe(socket2);
+      so2
+        .subscribe(socket1)
+        .subscribe(socket2);
+    });
+
+    afterEach(function() {
+      so1
+        .unsubscribe(socket1)
+        .unsubscribe(socket2);
+      so2
+        .unsubscribe(socket1)
+        .unsubscribe(socket2);
+    });
+
+    it('listens for updates to data', function(done) {
+
+      socket2.on('sharedobject-update', function(path, propertyPath, data) {
+        done();
+      });
+
+      so1.set('foo', 'bar', function(err, data) { });
+    });
+
+    it('synchronizes data', function(done) {
+
+      socket2.on('sharedobject-update', function(path, propertyPath, data) {
+        
+        expect(so2.data).to.eql(so1.data);
+        done();
+      });
+
+      so1.set('foo', 'bar', function(err, data) { });
+    });
   });
 
   describe('#unsubscribe', function() {
@@ -54,7 +102,7 @@ describe('SharedObject', function() {
     });
 
     it('removes subscriber from list', function() {
-      var client1 = {}, client2 = {};
+      var client1 = new EventEmitter(), client2 = new EventEmitter();
       so.subscribe(client1).subscribe(client2);
       expect(so.subscribers).to.have.length(2);
       expect(so.subscribers[0]).to.equal(client1);
@@ -201,14 +249,15 @@ describe('SharedObject', function() {
       it('should transmit the updated data to all subscribers', function(done) {
         var socket = {
           emit: function(event, data) {
-            expect(event).to.equal('sharedobject');
+            expect(event).to.equal('sharedobject-update');
             expect(data).to.eql({
               path: '/',
               propertyPath: 'foo',
               data: { foo: 'bar' }
             });
             done();
-          }
+          },
+          on: function() {}
         };
         so.subscribe(socket).set('foo', 'bar');
 
