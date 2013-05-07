@@ -76,6 +76,14 @@ describe('SharedObjectStore', function() {
             });
           });
 
+          it('emits a create event when a new SharedObject is created', function(done) {
+            sos.on('create', function(so) {
+              expect(so).to.be.instanceof(SharedObject);
+              done();
+            });
+            sos.getObject('/foo', true, function() {});
+          });
+
           it('connects to an existing SharedObject', function(done) {
             socket1.emit('getObject', '/foo', true, function(err, obj) {
               
