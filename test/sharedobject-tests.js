@@ -74,22 +74,24 @@ describe('SharedObject', function() {
 
     it('listens for updates to data', function(done) {
 
-      socket2.on('sharedobject-update', function(path, propertyPath, data) {
+      socket2.on('sharedobject-update', function(message) {
+        expect(message.sender).to.equal(42);
+        expect(message.propertyPath).to.equal('foo');
+        expect(message.data).to.eql({'foo': 'bar'});
         done();
       });
 
-      so1.set('foo', 'bar', function(err, data) { });
+      so1.set(42, 'foo', 'bar', function(err, data) { });
     });
 
     it('synchronizes data', function(done) {
 
-      socket2.on('sharedobject-update', function(path, propertyPath, data) {
-        
+      socket2.on('sharedobject-update', function(message) {
         expect(so2.data).to.eql(so1.data);
         done();
       });
 
-      so1.set('foo', 'bar', function(err, data) { });
+      so1.set(42, 'foo', 'bar', function(err, data) { });
     });
   });
 
@@ -205,22 +207,16 @@ describe('SharedObject', function() {
 
   describe('#set', function() {
 
-    var so;
+    var so, socket;
 
     beforeEach(function() {
       so = new SharedObject();
-    });
-
-    it('sets data to value for no property', function(done) {
-      var data = { foo: 'bar' };
-      so.set(data, function() {
-        expect(so.data).to.equal(data);
-        done();
-      });
+      socket = new EventEmitter();
+      socket.id = 42;
     });
 
     it('sets data.property to value', function(done) {
-      so.set('foo', 'bar', function() {
+      so.set(socket, 'foo', 'bar', function() {
         expect(so.data).to.have.property('foo')
           .that.equals('bar');
         done();
@@ -228,16 +224,16 @@ describe('SharedObject', function() {
     });
 
     it('sets deep property to value, creating parent objects', function(done) {
-      so.set('foo.bar.baz', 'w00t!', function() {
+      so.set(socket, 'foo.bar.baz', 'w00t!', function() {
         expect(so.data.foo.bar.baz).to.equal('w00t!');
         done();
       });
     });
 
     it('handles borken paths', function(done) {
-      so.set('person.age', 40, function() {
+      so.set(socket, 'person.age', 40, function() {
         expect(so.data.person.age).to.equal(40);
-        so.set('person.age.fake', '30', function(err, data) {
+        so.set(socket, 'person.age.fake', '30', function(err, data) {
           expect(data).to.be.undefined;
           expect(err).to.equal('Invalid property: \'person.age.fake\'');
           done();
@@ -251,6 +247,7 @@ describe('SharedObject', function() {
           emit: function(event, data) {
             expect(event).to.equal('sharedobject-update');
             expect(data).to.eql({
+              sender: 42,
               path: '/',
               propertyPath: 'foo',
               data: { foo: 'bar' }
@@ -259,7 +256,7 @@ describe('SharedObject', function() {
           },
           on: function() {}
         };
-        so.subscribe(socket).set('foo', 'bar');
+        so.subscribe(socket).set(42, 'foo', 'bar');
 
       });
     });
