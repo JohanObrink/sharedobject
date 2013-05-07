@@ -10,7 +10,7 @@
   SharedObject.prototype.connect = function(socket, fn) {
     this.socket = socket;
     var self = this;
-    socket.emit('getObject', this.path, true, function(err, data) {
+    socket.emit('sharedobject-connect', this.path, true, function(err, data) {
       this.data = data;
       fn(err, self);
     });

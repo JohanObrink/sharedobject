@@ -66,9 +66,9 @@ describe('SharedObjectStore', function() {
           socket2.emit('disconnect');
         });
 
-        describe('getObject', function() {
+        describe('sharedobject-connect', function() {
           it('creates a SharedObject and returns data', function(done) {
-            socket1.emit('getObject', '/foo', true, function(err, obj) {
+            socket1.emit('sharedobject-connect', '/foo', true, function(err, obj) {
               expect(err).to.not.exist;
               expect(obj).to.eql({});
               expect(sos.objects['/foo']).to.exist;
@@ -85,20 +85,20 @@ describe('SharedObjectStore', function() {
           });
 
           it('connects to an existing SharedObject', function(done) {
-            socket1.emit('getObject', '/foo', true, function(err, obj) {
+            socket1.emit('sharedobject-connect', '/foo', true, function(err, obj) {
               
               var so = obj;
 
               expect(Object.keys(sos.objects)).to.have.length(1);
               expect(sos.objects['/foo']).to.exist;
 
-              socket1.emit('getObject', '/bar', true, function(err, obj) {
+              socket1.emit('sharedobject-connect', '/bar', true, function(err, obj) {
 
                 expect(obj).to.not.equal(so);
                 expect(Object.keys(sos.objects)).to.have.length(2);
                 expect(sos.objects['/bar']).to.exist;
 
-                socket2.emit('getObject', '/foo', true, function(err, obj) {
+                socket2.emit('sharedobject-connect', '/foo', true, function(err, obj) {
                   expect(obj).to.equal(so);
                   expect(Object.keys(sos.objects)).to.have.length(2);
 
@@ -110,12 +110,12 @@ describe('SharedObjectStore', function() {
           });
 
           it('subscribes the socket to object changes', function(done) {
-            socket1.emit('getObject', '/foo', true, function(err, data) {
+            socket1.emit('sharedobject-connect', '/foo', true, function(err, data) {
               var obj = sos.objects['/foo'];
               expect(obj.subscribers).to.have.length(1);
               expect(obj.subscribers[0]).to.equal(socket1);
 
-              socket2.emit('getObject', '/foo', true, function(err, data) {
+              socket2.emit('sharedobject-connect', '/foo', true, function(err, data) {
                 expect(obj.subscribers).to.have.length(2);
                 expect(obj.subscribers[1]).to.equal(socket2);
 
@@ -125,12 +125,12 @@ describe('SharedObjectStore', function() {
           });
 
           it('unsubscribes disconnected sockets', function(done) {
-            socket1.emit('getObject', '/foo', true, function(err, data) {
+            socket1.emit('sharedobject-connect', '/foo', true, function(err, data) {
               var obj = sos.objects['/foo'];
               expect(obj.subscribers).to.have.length(1);
               expect(obj.subscribers[0]).to.equal(socket1);
 
-              socket2.emit('getObject', '/foo', true, function(err, data) {
+              socket2.emit('sharedobject-connect', '/foo', true, function(err, data) {
                 expect(obj.subscribers).to.have.length(2);
                 expect(obj.subscribers[1]).to.equal(socket2);
 
@@ -144,7 +144,7 @@ describe('SharedObjectStore', function() {
           });
 
           it('removes dead objects', function(done) {
-            socket1.emit('getObject', '/foo', true, function(err, data) {
+            socket1.emit('sharedobject-connect', '/foo', true, function(err, data) {
               var obj = sos.objects['/foo'];
               expect(obj.subscribers).to.have.length(1);
               expect(obj.subscribers[0]).to.equal(socket1);
